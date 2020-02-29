@@ -11,7 +11,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   static const platform = const MethodChannel('Getsongslist');
-  String _batteryLevel = 'Unknown Song list';
 
 
   @override
@@ -19,23 +18,44 @@ class _HomePageState extends State<HomePage> {
     _getSongLists();
   }
 
-  Future<void> _getSongLists() async {
-    String batteryLevel;
+  Future<List<dynamic>> _getSongLists() async {
+    List<dynamic> batteryLevel;
     try {
-      final batteryLevel = await platform.invokeMethod('getSongsList');
+      batteryLevel = await platform.invokeMethod('getSongsList');
     } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
+      batteryLevel = null;
     }
-
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
+    return batteryLevel;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Text("Music Player Home"),
+    return MaterialApp(
+      title: 'Welcome to Flutter',
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Music Player'),
+        ),
+        body: FutureBuilder(
+          future: _getSongLists(),
+          builder: (BuildContext context, AsyncSnapshot asyncsnapshot){
+            if(asyncsnapshot.hasData){
+              List<dynamic> _songList = asyncsnapshot.data;
+              return ListView.builder(
+                  itemCount: _songList.length,
+                  itemBuilder: (BuildContext context, int index){
+                    return ListTile(
+                      title: Text(_songList[index]),
+                    );
+                  }
+              );
+            } else{
+              return CircularProgressIndicator();
+            }
+
+          },
+        )
+      ),
     );
   }
 }
